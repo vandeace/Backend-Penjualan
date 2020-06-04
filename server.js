@@ -1,10 +1,14 @@
-const express = require('express');
+const express = require("express");
+require("dotenv").config();
+
 const app = express();
-const port = 5000;
-const route = require('./routes/index')
+const port = process.env.PORT;
+const route = require("./routes/index");
 
 app.use(express.json());
 
-app.use('/api/v1', route);
+app.use("/api/v1", route);
+
+app.use(express.json());
 
 app.listen(port, () => console.log(`listening on port ${port}`));
