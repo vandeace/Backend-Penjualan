@@ -13,6 +13,9 @@ exports.create = async (req, res) => {
       { w: 1 },
       { returning: true }
     );
+
+    let price = 0;
+
     //cek every products
     req.body.products.map(async (item) => {
       //check if the product match with item.id
@@ -27,6 +30,9 @@ exports.create = async (req, res) => {
       }
       //make total price for each item
       const totalHarga = item.quantity * produk.harga;
+
+      price = price + totalHarga;
+
       //put data to an object
       const po = {
         orderId: savedOrder.id,
@@ -35,6 +41,13 @@ exports.create = async (req, res) => {
         total: totalHarga,
       };
       //make balance
+      const newOrder = await order.update(
+        {
+          total: price,
+        },
+        { where: { id: savedOrder.id } }
+      );
+
       const balance = produk.quantity - item.quantity;
       //put balance
       const data = { quantity: balance };
@@ -155,7 +168,6 @@ exports.update = async (req, res) => {
       }
 
       const totalHarga = item.quantity * produk.harga;
-      
 
       price = price + totalHarga;
 
@@ -192,5 +204,24 @@ exports.update = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: "server internal error" });
+  }
+};
+
+exports.destroy = async (req, res) => {
+  try {
+    const data = await order.findByPk(req.params.id);
+
+    //remove all in products
+    const products = await data.getProducts();
+    data.removeProducts(products);
+
+    const deleteOrder = await order.destroy({
+      where: { id: req.params.id },
+    });
+
+    res.status(200).send({ message: "success to delete data!" });
+  } catch (error) {
+    res.status(500).send({ message: "Failed to delete data!" });
+    console.log(error);
   }
 };

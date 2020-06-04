@@ -14,6 +14,7 @@ const {
   create : createTransaction,
   show : showAllTransaction,
   update : updateTransaction,
+  destroy : deleteTransaction,
 } = require("../controllers/transaction")
 
 //========USER ACTION=======================
@@ -29,5 +30,6 @@ router.patch("/product/:id", updateProduct);
 router.post("/transaction", createTransaction)
 router.get("/transactions", showAllTransaction)
 router.patch("/transaction/:id", updateTransaction)
+router.delete("/transaction/:id", deleteTransaction)
 
 module.exports = router;
