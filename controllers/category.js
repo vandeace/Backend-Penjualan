@@ -19,3 +19,13 @@ exports.create = async (req, res) => {
     console.log(error);
   }
 };
+
+exports.show = async (req,res) => {
+  try {
+    const allCategory = await category.findAll()
+    res.status(200).send({data:allCategory})
+  } catch (error) {
+    res.status(500).send({ message: "Server Internal Error" });
+    console.log(error);
+  }
+}

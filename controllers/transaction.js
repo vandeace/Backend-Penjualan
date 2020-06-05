@@ -6,6 +6,35 @@ const {
   productOrder,
 } = require("../models");
 
+const transactionParam = {
+  include: [
+    {
+      model: customer,
+      attributes: ["nama"],
+    },
+    {
+      model: product,
+      as: "products",
+      attributes: {
+        exclude: ["createdAt", "updatedAt", "quantity", "total", "categoryId"],
+      },
+      through: {
+        model: productOrder,
+        attributes: {
+          exclude: ["createdAt", "updatedAt", "productId", "orderId"],
+        },
+      },
+      include: [
+        {
+          model: category,
+          attributes: ["jenisProduk"],
+        },
+      ],
+    },
+  ],
+  attributes: { exclude: ["createdAt", "updatedAt", "customerId"] },
+};
+
 exports.create = async (req, res) => {
   try {
     const savedOrder = await order.create(
@@ -15,6 +44,7 @@ exports.create = async (req, res) => {
     );
 
     let price = 0;
+    let qty = 0;
 
     //cek every products
     req.body.products.map(async (item) => {
@@ -32,6 +62,7 @@ exports.create = async (req, res) => {
       const totalHarga = item.quantity * produk.harga;
 
       price = price + totalHarga;
+      qty = qty + item.quantity;
 
       //put data to an object
       const po = {
@@ -44,6 +75,7 @@ exports.create = async (req, res) => {
       const newOrder = await order.update(
         {
           total: price,
+          quantity: qty,
         },
         { where: { id: savedOrder.id } }
       );
@@ -69,41 +101,10 @@ exports.create = async (req, res) => {
 exports.show = async (req, res) => {
   try {
     const transactions = await order.findAll({
-      include: [
-        {
-          model: customer,
-          attributes: ["nama"],
-        },
-        {
-          model: product,
-          as: "products",
-          attributes: {
-            exclude: [
-              "createdAt",
-              "updatedAt",
-              "quantity",
-              "total",
-              "categoryId",
-            ],
-          },
-          through: {
-            model: productOrder,
-            attributes: {
-              exclude: ["createdAt", "updatedAt", "productId", "orderId"],
-            },
-          },
-          include: [
-            {
-              model: category,
-              attributes: ["jenisProduk"],
-            },
-          ],
-        },
-      ],
-      attributes: { exclude: ["createdAt", "updatedAt", "customerId"] },
+      ...transactionParam,
       order: [["id", "DESC"]],
     });
-    res.status(200).send({ transactions });
+    res.status(200).send({ data: transactions });
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: "Server Internal Error" });
@@ -115,38 +116,6 @@ exports.update = async (req, res) => {
     //get data from database
     const data = await order.findOne({
       where: { id: req.params.id },
-      include: [
-        {
-          model: customer,
-          attributes: ["nama"],
-        },
-        {
-          model: product,
-          as: "products",
-          attributes: {
-            exclude: [
-              "createdAt",
-              "updatedAt",
-              "quantity",
-              "total",
-              "categoryId",
-            ],
-          },
-          through: {
-            model: productOrder,
-            attributes: {
-              exclude: ["createdAt", "updatedAt", "productId", "orderId"],
-            },
-          },
-          include: [
-            {
-              model: category,
-              attributes: ["jenisProduk"],
-            },
-          ],
-        },
-      ],
-      attributes: { exclude: ["createdAt", "updatedAt", "customerId"] },
     });
     //check data first
     if (!data) {
@@ -157,6 +126,7 @@ exports.update = async (req, res) => {
     data.removeProducts(products);
 
     let price = 0;
+    let qty = 0;
 
     req.body.products.map(async (item) => {
       //check if the product match with item.id
@@ -170,6 +140,7 @@ exports.update = async (req, res) => {
       const totalHarga = item.quantity * produk.harga;
 
       price = price + totalHarga;
+      qty = qty + item.quantity;
 
       const po = {
         orderId: data.id,
@@ -181,6 +152,7 @@ exports.update = async (req, res) => {
       const newOrder = await order.update(
         {
           total: price,
+          quantity: qty,
         },
         { where: { id: data.id } }
       );
@@ -199,8 +171,7 @@ exports.update = async (req, res) => {
       },
       { where: { id: req.params.id } }
     );
-
-    res.status(200).send({ message: "success update data", data });
+    res.status(200).send({ message: "success update data" });
   } catch (error) {
     console.log(error);
     res.status(500).send({ message: "server internal error" });
@@ -220,6 +191,19 @@ exports.destroy = async (req, res) => {
     });
 
     res.status(200).send({ message: "success to delete data!" });
+  } catch (error) {
+    res.status(500).send({ message: "Failed to delete data!" });
+    console.log(error);
+  }
+};
+
+exports.showOne = async (req, res) => {
+  try {
+    const oneOrder = await order.findOne({
+      ...transactionParam,
+      where: { id: req.params.id },
+    });
+    res.status(200).send({ data: oneOrder });
   } catch (error) {
     res.status(500).send({ message: "Failed to delete data!" });
     console.log(error);

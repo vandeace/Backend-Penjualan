@@ -2,9 +2,9 @@ const { product, category } = require("../models");
 
 exports.create = async (req, res) => {
   try {
-    const { namaProduk,harga,quantity } = req.body;
-    const totalHarga = harga * quantity 
-    req.body.total = totalHarga
+    const { namaProduk, harga, quantity } = req.body;
+    const totalHarga = harga * quantity;
+    req.body.total = totalHarga;
     const produk = await product.findOne({
       where: {
         namaProduk,
@@ -77,11 +77,30 @@ exports.update = async (req, res) => {
 };
 
 exports.destroy = async (req, res) => {
-    try {
-      await product.destroy({ where: { id: req.params.id } });
-      res.status(200).send({ status: 'success delete user' });
-    } catch (error) {
-      console.log(error);
-      res.status(500).send({message:"Server Internal Error"})
-    }
-  };
+  try {
+    await product.destroy({ where: { id: req.params.id } });
+    res.status(200).send({ status: "success delete Product" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Server Internal Error" });
+  }
+};
+
+exports.getOne = async (req, res) => {
+  try {
+    const datas = await product.findOne({
+      where: { id: req.params.id },
+      include: [
+        {
+          model: category,
+          attributes: ["jenisProduk"],
+        },
+      ],
+      attributes: { exclude: ["createdAt", "updatedAt", "categoryId"] },
+    });
+    res.status(200).send(datas);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: "Server Internal Error" });
+  }
+};

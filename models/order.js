@@ -4,6 +4,7 @@ module.exports = (sequelize, DataTypes) => {
     "order",
     {
       customerId: DataTypes.STRING,
+      quantity : DataTypes.INTEGER,
       total: DataTypes.INTEGER,
     },
     {}

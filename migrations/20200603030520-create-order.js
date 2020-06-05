@@ -18,6 +18,9 @@ module.exports = {
         onUpdate: 'NO ACTION',
         onDelete: 'NO ACTION',
       },
+      quantity: {
+        type: Sequelize.INTEGER
+      },
       total: {
         type: Sequelize.DECIMAL
       },
